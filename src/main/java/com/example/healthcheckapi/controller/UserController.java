@@ -161,7 +161,7 @@ public class UserController {
                 if(user.getPassword() != null)
                     updatedUser.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 
-                updatedUser.setAccount_updated(OffsetDateTime.now(Clock.systemUTC()).toString());
+                updatedUser.setAccount_updated(OffsetDateTime.now().toString());
                 
                 userRepository.save(updatedUser);
                 

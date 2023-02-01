@@ -52,8 +52,8 @@ public class User {
         this.last_name = last_name;
         this.password = password;
         this.username = username;
-        this.account_created = OffsetDateTime.now(Clock.systemUTC()).toString();
-        this.account_updated = OffsetDateTime.now(Clock.systemUTC()).toString();
+        this.account_created = OffsetDateTime.now().toString();
+        this.account_updated = OffsetDateTime.now().toString();
     }
 
     @Override
