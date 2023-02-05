@@ -34,7 +34,7 @@ public class UserPostTests {
         String json = "{\"first_name\":\"First\",\"last_name\":\"Last\",\"password\":\"password\",\"username\":\"email@mail.com\"}";
         System.out.println(json);
 
-        mockMvc.perform(post("/v1/userid").content(json)
+        mockMvc.perform(post("/v1/user").content(json)
                 .contentType(MediaType.APPLICATION_JSON)
                 ).andExpect(status().isCreated());
     }
