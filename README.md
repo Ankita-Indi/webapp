@@ -17,7 +17,7 @@ JAVA 1.8
 Maven
 Spring boot setup
 git and github
-Postman
+SQL
 IntelliJ IDE
 
 
