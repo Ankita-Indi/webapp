@@ -31,7 +31,7 @@ public class UserController {
     public ResponseEntity<User> createUser(@RequestBody User user) {
         try {
 
-            System.out.println("In post /user");
+            System.out.println("In post");
 
             if(user==null || user.getPassword() == null || user.getFirst_name() == null ||
                     user.getUsername() == null || user.getLast_name() == null)
@@ -45,6 +45,7 @@ public class UserController {
 
             System.out.println("Setting for post request");
             Optional<User> u = userRepository.findByUsername(user.getUsername());
+            System.out.println(u);
 
             System.out.println("checking if user is present");
             if (u.isPresent()) {
@@ -70,11 +71,12 @@ public class UserController {
         }
     }
 
-    @GetMapping("user/{userId}")
-    public ResponseEntity<User> getUserByEmail(@PathVariable int userId, HttpServletRequest request) {
+//    @GetMapping("/user/self")
+    @GetMapping("/user/{userid}")
+    public ResponseEntity<User> getUserByEmail(HttpServletRequest request, @PathVariable int userid) {
 
         try{
-            String upd = request.getHeader( "authorization");
+            String upd = request.getHeader("authorization");
             if (upd == null || upd.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             }
@@ -87,23 +89,21 @@ public class UserController {
             System.out.println("password: " + password);
 
 
-            System.out.println("In get /user/self");
+            System.out.println("In get");
             Optional<User> inputUser = userRepository.findByUsername(userName);
-
-            if (inputUser.get().getId() != userId)
+            if (inputUser.get().getId() != userid)
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 
             if (inputUser.isPresent()) {
                 if (bCryptPasswordEncoder.matches(password, inputUser.get().getPassword())) {
-
                     return new ResponseEntity<>(inputUser.get(), HttpStatus.OK);
-                } else {
+                }else {
                     System.out.println("Password does not match");
                     return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
                 }
             } else {
                 System.out.println("User Not Found");
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
         }
         catch(Exception e)
@@ -114,12 +114,10 @@ public class UserController {
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    @PutMapping("user/{userId}")
-    public ResponseEntity<String> updateUser(@PathVariable int userId,@RequestBody User user, HttpServletRequest request) {
+    @PutMapping("/user/{userid}")
+    public ResponseEntity<String> updateUser(@PathVariable int userid, @RequestBody User user, HttpServletRequest request) {
 
-        System.out.println("In put /user/self");
-
-
+        System.out.println("In put");
 
         if (user == null) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -130,7 +128,7 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        if (user.getUsername() != null || user.getId() != 0) {
+        if (user.getUsername() != null || user.getId() != 0) { //null
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         String upd = request.getHeader("authorization");
@@ -146,9 +144,10 @@ public class UserController {
         System.out.println("password: " + password);
         
         Optional<User> inputUser = userRepository.findByUsername(userName);
-
-        if (inputUser.get().getId() != userId)
+        if (inputUser.get().getId() != userid)
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        
+
         // validate password
         if (inputUser.isPresent()) {
             if (bCryptPasswordEncoder.matches(password, inputUser.get().getPassword())) {// update

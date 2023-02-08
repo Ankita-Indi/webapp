@@ -16,6 +16,15 @@ import java.util.UUID;
 @Table(name = "user")
 public class User {
 
+//    @Id
+//    @GeneratedValue(generator = "UUID")
+//    @GenericGenerator(
+//            name = "UUID",
+//            strategy = "org.hibernate.id.UUIDGenerator"
+//    )
+//    @Column(name = "id", unique = true, nullable = false, updatable = false)
+//    private String id;
+
     @Id
     @GeneratedValue(strategy=GenerationType.AUTO)
     private int id;
@@ -47,6 +56,7 @@ public class User {
     }
 
     public User(String first_name, String last_name, String password, String username) {
+//        this.id = UUID.randomUUID().toString();
         this.id = id;
         this.first_name = first_name;
         this.last_name = last_name;
