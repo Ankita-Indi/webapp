@@ -54,7 +54,9 @@ public class ProductController {
                     System.out.println("Password matched");
                     if (product == null || product.getName() == null || product.getDescription() == null ||
                             product.getSku() == null || product.getManufacturer() == null || product.getQuantity() < 0 ||
-                            product.getQuantity() > 100)//|| ((Object)product.getQuantity()).getClass().getSimpleName() != "Integer")
+                            product.getQuantity() > 100 || product.getQuantity() == null ||
+                            product.getDate_last_updated() != null || product.getDate_added() != null ||
+                            product.getOwner_user_id() != null)
                     {
                         System.out.println("Product failed basic checks");
                         return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
@@ -89,14 +91,13 @@ public class ProductController {
                 }
             } else {
                 System.out.println("User does not exist");
-                //return new ResponseEntity<>() to do
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
             System.out.println("exception: " + e);
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        }
+            return new ResponseEntity<>(null,HttpStatus.BAD_REQUEST);
 
-        return null;
+        }
     }
 
 
@@ -111,6 +112,15 @@ public class ProductController {
             if (upd == null || upd.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             }
+            if ((product.getName() == null || product.getName().isEmpty())
+                    || (product.getManufacturer() == null || product.getManufacturer().isEmpty())
+                    || (product.getSku() == null || product.getSku().isEmpty())
+                    || product.getDate_added() != null
+                    || product.getDate_last_updated() != null
+                    || product.getOwner_user_id() != null) {
+                System.out.println("Something is null or absent");
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
 
             String pair = new String(Base64.decodeBase64(upd.substring(6)));
             String userName = pair.split(":")[0];
@@ -120,18 +130,19 @@ public class ProductController {
             Optional<User> inputUser = userRepository.findByUsername(userName);
             Optional<Product> inputProduct = productRepository.findById(productId);
 
-
             if (inputUser.isPresent()) {
                 if (bCryptPasswordEncoder.matches(password, inputUser.get().getPassword())) {
                     System.out.println("Password matched");
                     if (inputProduct.isPresent()) {
                         if (inputUser.get().getId() != inputProduct.get().getOwner_user_id())
                             return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
-                        if (inputProduct.get().getSku() != product.getSku()) {
+
+                        if (!inputProduct.get().getSku().matches(product.getSku())) {
                             System.out.println("Cannot change Sku");
                             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
                         }
-                        if (product.getQuantity() > 0 && product.getQuantity() < 100) {
+
+                        if (product.getQuantity() != null && product.getQuantity() >= 0 && product.getQuantity() <= 100) {
                             Product updatedProduct = inputProduct.get();
                             if (product.getName() != null)
                                 updatedProduct.setName(product.getName());
@@ -144,9 +155,9 @@ public class ProductController {
 
                             productRepository.save(updatedProduct);
                             return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
-                        } else {
-                            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-                        }
+                            } else {
+                                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+                            }
                     } else {
                         return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
                     }
@@ -166,7 +177,7 @@ public class ProductController {
     }
 
     @PatchMapping("/product/{productId}")
-    public ResponseEntity<Product> updateProductPatch(@PathVariable int productId, @RequestBody Product product, HttpServletRequest request) {
+    public ResponseEntity<Product> updateProductPatch(@PathVariable int productId, HttpServletRequest request, @RequestBody Product product) {
 
         System.out.println("In patch");
         try {
@@ -184,44 +195,79 @@ public class ProductController {
             Optional<User> inputUser = userRepository.findByUsername(userName);
             Optional<Product> inputProduct = productRepository.findById(productId);
 
+
             if (inputUser.isPresent()) {
                 if (bCryptPasswordEncoder.matches(password, inputUser.get().getPassword())) {
                     System.out.println("Password matched");
                     if (inputProduct.isPresent()) {
+                        Product updatedProduct = inputProduct.get();
+                        if (product.getDate_added() != null
+                                || product.getDate_last_updated() != null
+                                || product.getOwner_user_id() != null){
+                            System.out.println("Cannot update dates or owner");
+                            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
+                        }
                         if (inputUser.get().getId() != inputProduct.get().getOwner_user_id())
                             return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
-                        if (inputProduct.get().getSku() != product.getSku()) {
-                            System.out.println("Cannot change Sku");
-                            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+                        if(product.getName() != null){
+                            System.out.println("Test: " + product.getName());
+                            updatedProduct.setName(product.getName());}
+                        else //(product.getName() == null)
+                            updatedProduct.setName(inputProduct.get().getName());
+                        if(product.getManufacturer() != null)
+                            updatedProduct.setManufacturer(product.getManufacturer());
+                        else //if(product.getManufacturer() == null)
+                            updatedProduct.setManufacturer(inputProduct.get().getManufacturer());
+                        if(product.getManufacturer() != null)
+                            updatedProduct.setManufacturer(product.getManufacturer());
+                        else //if(product.getManufacturer() == null)
+                            updatedProduct.setManufacturer(inputProduct.get().getManufacturer());
+                        if(product.getDescription() != null)
+                            updatedProduct.setDescription(product.getDescription());
+                        else //if(product.getManufacturer() == null)
+                            updatedProduct.setDescription(inputProduct.get().getDescription());
+                        if(product.getSku() != null) {
+                                if (!inputProduct.get().getSku().matches(product.getSku())) {
+                                    System.out.println("Cannot change Sku");
+                                    return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+                                }
+                                else{
+                                    updatedProduct.setSku(product.getSku());
+                                }
                         }
-                        if (product.getQuantity() > 0 && product.getQuantity() < 100) {
-                            Product updatedProduct = inputProduct.get();
-                            if (product.getName() != null)
-                                updatedProduct.setName(product.getName());
-                            if (product.getDescription() != null)
-                                updatedProduct.setDescription(product.getDescription());
-                            if (product.getManufacturer() != null)
-                                updatedProduct.setManufacturer(product.getManufacturer());
-                            updatedProduct.setQuantity(product.getQuantity());
-                            updatedProduct.setDate_last_updated(OffsetDateTime.now().toString());
-
-                            productRepository.save(updatedProduct);
-                            return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
-                        } else {
-                            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+                        else
+                            updatedProduct.setSku(inputProduct.get().getSku());
+                        if(product.getQuantity() == null)
+                            updatedProduct.setQuantity(inputProduct.get().getQuantity());
+                        else{
+                            if(product.getQuantity() >= 0 && product.getQuantity() <= 100)
+                                updatedProduct.setQuantity(product.getQuantity());
+                            else
+                                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
                         }
-                    } else {
+                        updatedProduct.setDate_last_updated(OffsetDateTime.now().toString());
+                        productRepository.save(updatedProduct);
+                        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+                    }
+                    else {
+                        System.out.println("Product not found");
                         return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
                     }
-                } else {
+                }
+                else {
+                    System.out.println("Password incorrect");
                     return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
                 }
-            } else {
+            }
+            else {
                 System.out.println("User not there");
                 return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
             }
 
-        } catch (Exception e) {
+
+        }
+        catch (Exception e) {
             System.out.println("Exception:" + e);
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
@@ -269,9 +315,12 @@ public class ProductController {
                 if (bCryptPasswordEncoder.matches(password, inputUser.get().getPassword())) {
                     System.out.println("Password matched");
                     if (inputProduct.isPresent()) {
-                        if (inputUser.get().getId() != inputProduct.get().getOwner_user_id())
+                        if (inputUser.get().getId() != inputProduct.get().getOwner_user_id()){
+                            System.out.println("Cannot delete others product");
                             return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
+                        }
                         productRepository.delete(inputProduct.get());
+                        System.out.println("Deleted product");
                         return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
                     } else {
                         System.out.println("Product not present");
@@ -279,6 +328,7 @@ public class ProductController {
                     }
 
                 } else {
+                    System.out.println("Password incorrect");
                     return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
                 }
             } else {
