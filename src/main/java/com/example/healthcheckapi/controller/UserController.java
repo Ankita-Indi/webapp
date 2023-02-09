@@ -34,10 +34,12 @@ public class UserController {
             System.out.println("In post");
 
             if(user==null || user.getPassword() == null || user.getFirst_name() == null ||
-                    user.getUsername() == null || user.getLast_name() == null)
+                    user.getUsername() == null || user.getLast_name() == null || user.getAccount_created() != null ||
+                    user.getAccount_updated() != null)
             {
                 return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
             }
+
 
             // check if already exists
 
@@ -54,6 +56,7 @@ public class UserController {
 
             // encrypt password
             String encodedPassword = bCryptPasswordEncoder.encode(user.getPassword());
+
 
             user.setPassword(encodedPassword);
             System.out.println("encoded: " + encodedPassword);
@@ -82,8 +85,14 @@ public class UserController {
             }
 
             String pair = new String(Base64.decodeBase64(upd.substring(6)));
+            String[] splitpair = pair.split(":");
+            if(splitpair.length != 2){
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
             String userName = pair.split(":")[0];
             String password = pair.split(":")[1];
+
+
 
             System.out.println("username: " + userName);
             System.out.println("password: " + password);
@@ -91,11 +100,12 @@ public class UserController {
 
             System.out.println("In get");
             Optional<User> inputUser = userRepository.findByUsername(userName);
-            if (inputUser.get().getId() != userid)
-                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
 
             if (inputUser.isPresent()) {
                 if (bCryptPasswordEncoder.matches(password, inputUser.get().getPassword())) {
+                    if (inputUser.get().getId() != userid)
+                        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
                     return new ResponseEntity<>(inputUser.get(), HttpStatus.OK);
                 }else {
                     System.out.println("Password does not match");
@@ -106,72 +116,88 @@ public class UserController {
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
         }
-        catch(Exception e)
-        {
-            System.out.println("Exception:"+e);
+        catch(Exception e) {
+            System.out.println("Exception:" + e);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        System.out.println("End - User Not Found");
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @PutMapping("/user/{userid}")
     public ResponseEntity<String> updateUser(@PathVariable int userid, @RequestBody User user, HttpServletRequest request) {
+        try {
+            System.out.println("In put");
 
-        System.out.println("In put");
+            if (user == null) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+            if ((user.getFirst_name() == null || user.getFirst_name().isEmpty())
+                    || (user.getLast_name() == null || user.getLast_name().isEmpty())
+                    || (user.getPassword() == null || user.getPassword().isEmpty())
+                    || (user.getAccount_created() != null)
+                    || user.getAccount_updated() != null
+                    || user.getUsername() == null || user.getUsername().isEmpty()) {
+                System.out.println("Something is null or absent");
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
 
-        if (user == null) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
-        if ((user.getFirst_name() == null || user.getFirst_name().isEmpty())
-                && (user.getLast_name() == null || user.getLast_name().isEmpty())
-                && (user.getPassword() == null || user.getPassword().isEmpty())) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-
-        if (user.getUsername() != null || user.getId() != 0) { //null
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-        String upd = request.getHeader("authorization");
-        if (upd == null || upd.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-
-        String pair = new String(Base64.decodeBase64(upd.substring(6)));
-        String userName = pair.split(":")[0];
-        String password = pair.split(":")[1];
-
-        System.out.println("username: " + userName);
-        System.out.println("password: " + password);
-        
-        Optional<User> inputUser = userRepository.findByUsername(userName);
-        if (inputUser.get().getId() != userid)
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        
-
-        // validate password
-        if (inputUser.isPresent()) {
-            if (bCryptPasswordEncoder.matches(password, inputUser.get().getPassword())) {// update
-
-                User updatedUser = inputUser.get();
-                if(user.getFirst_name() != null)
-                    updatedUser.setFirst_name(user.getFirst_name());
-                if(user.getLast_name() != null)
-                    updatedUser.setLast_name(user.getLast_name());
-                if(user.getPassword() != null)
-                    updatedUser.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-
-                updatedUser.setAccount_updated(OffsetDateTime.now().toString());
-                
-                userRepository.save(updatedUser);
-                
-                return new ResponseEntity<>("Update success", HttpStatus.NO_CONTENT);
-
-            } else {
+//            if (user.getUsername() != null || user.getId() != 0) { //null
+//                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+//            }
+            String upd = request.getHeader("authorization");
+            if (upd == null || upd.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             }
-        } else {
 
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            String pair = new String(Base64.decodeBase64(upd.substring(6)));
+            String[] splitpair = pair.split(":");
+            if(splitpair.length != 2){
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
+            String userName = pair.split(":")[0];
+            String password = pair.split(":")[1];
+
+            System.out.println("username: " + userName);
+            System.out.println("password: " + password);
+
+            Optional<User> inputUser = userRepository.findByUsername(userName);
+
+
+
+            // validate password
+            if (inputUser.isPresent()) {
+                if (bCryptPasswordEncoder.matches(password, inputUser.get().getPassword())) {
+                    if (inputUser.get().getId() != userid)
+                        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+                    if(!userName.matches(user.getUsername())){
+                        System.out.println("Username mismatch");
+                        return new ResponseEntity<>( HttpStatus.BAD_REQUEST);
+                    }
+
+                    User updatedUser = inputUser.get();
+                    if (user.getFirst_name() != null)
+                        updatedUser.setFirst_name(user.getFirst_name());
+                    if (user.getLast_name() != null)
+                        updatedUser.setLast_name(user.getLast_name());
+                    if (user.getPassword() != null)
+                        updatedUser.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+
+                    updatedUser.setAccount_updated(OffsetDateTime.now().toString());
+
+                    userRepository.save(updatedUser);
+
+                    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+
+                } else {
+                    return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+                }
+            } else {
+
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        }
+        catch(Exception e) {
+            System.out.println("Exception:" + e);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 }

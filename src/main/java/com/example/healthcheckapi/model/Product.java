@@ -43,7 +43,7 @@ public class Product {
     @NotNull(message="Quantity can be between 0 and 100")
 //    @Size(min = 0, max = 100)
     @Column(name = "quantity")
-    private int quantity;
+    private Integer quantity;
 
     private String date_added;
     private String date_last_updated;
@@ -51,7 +51,7 @@ public class Product {
 //    @ManyToOne
 //    @JoinColumn(name = "owner_user_id", nullable = false)
     @Column(name = "owner_user_id")
-    private int owner_user_id;
+    private Integer owner_user_id;
 
     public Product(String name, String description, String sku, String manufacturer, int quantity, int owner_user_id) {
 //        this.id = UUID.randomUUID().toString();
@@ -64,6 +64,9 @@ public class Product {
         this.owner_user_id = owner_user_id;
         this.date_added = OffsetDateTime.now().toString();
         this.date_last_updated = OffsetDateTime.now().toString();
+    }
+    public Product(int id){
+        this.id = id;
     }
 
     public Product() {
@@ -110,11 +113,11 @@ public class Product {
         this.manufacturer = manufacturer;
     }
 
-    public int getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
@@ -134,11 +137,11 @@ public class Product {
         this.date_last_updated = date_last_updated;
     }
 
-    public int getOwner_user_id() {
+    public Integer getOwner_user_id() {
         return owner_user_id;
     }
 
-    public void setOwner_user_id(int owner_user_id) {
+    public void setOwner_user_id(Integer owner_user_id) {
         this.owner_user_id = owner_user_id;
     }
 
