@@ -26,7 +26,7 @@ class HealthCheckApiApplicationTests {
     @Test
     public void testHealthCheck() throws Exception
     {
-        mockMvc.perform(get("/healthz")).andExpect(status().isOk());
+        mockMvc.perform(get("/healthzaaa")).andExpect(status().isOk());
     }
 
 }
