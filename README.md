@@ -37,7 +37,7 @@ PUT: localhost:8080/v1/user/{userid}
 
 GET: localhost:8080/v1/user/{userid}
 
-**Assignment02
+**Assignment02**
 
 GET: localhost:8080/v1/product/{productId}
 
