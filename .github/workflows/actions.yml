@@ -4,7 +4,7 @@
 # You can adjust the behavior by modifying this file.
 # For more information, see:
 # https://github.com/github/super-linter
-name: Cloud Computing CI/CD
+name: Unit Tests
 
 on:
   pull_request:
@@ -32,3 +32,5 @@ jobs:
 
       - name: Run Tests
         run: mvn -B test
+
+    
