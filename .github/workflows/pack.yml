@@ -2,9 +2,7 @@ name: Build Packer on Merge
 
 on:
   pull_request:
-    types: [closed]
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build-packer:
@@ -12,6 +10,10 @@ jobs:
     if: github.event.pull_request.merged == true
     steps:
       - uses: actions/checkout@v3
+      - name: Setup Packer 
+        uses: hashicorp/setup-packer@v1 
+        with: 
+          version: '1.7.4'
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
