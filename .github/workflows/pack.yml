@@ -30,7 +30,7 @@ jobs:
         with:
           command: build
           arguments: "-color=false -on-error=abort"
-          target: main.pkr.hcl
+          target: ami.pkr.hcl
           working_directory: ami
         env:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}

@@ -6,7 +6,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: CI Workflow
+name: Packer Validation & JDK build
 on:
   pull_request:
     branches: [main]
@@ -40,6 +40,7 @@ jobs:
           command: validate
           arguments: -syntax-only
           target: ami.pkr.hcl
+          working_directory: ami
         env:
           PACKER_LOG: 1 # enable debug log for packer
 
