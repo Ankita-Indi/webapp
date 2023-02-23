@@ -1,75 +1,45 @@
-name: CI
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
 
-env:
-  ARTIFACT_NAME: webservice-${{ github.sha }}
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
 
+name: CI Workflow
 on:
-  push:
+  pull_request:
+    branches: [main]
+
 jobs:
-#  build:
-#    name: Service Unit tests
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: Set up JDK 8
-#        uses: actions/setup-java@v2
-#        with:
-#          java-version: '8'
-#          distribution: 'adopt'
-#      - name: Run Tests
-#        run: mvn --batch-mode --update-snapshots test
-  ami_build:
-#    needs: build
+  build-and-test:
     runs-on: ubuntu-latest
-    name: Packer AMI setup
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Zip files
-        run: zip -r webservice.zip ./
-      - name: Show contents of folder
-        run: echo $(ls)
-#      - name: Action - Checkout
-#        uses: actions/checkout@v2
-      - name: Packer Init 1
-        uses: hashicorp/packer-github-actions@master
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
-          command: init
-          target: ami.pkr.hcl
-      - name: Validate Template
+          java-version: "17"
+          distribution: "temurin"
+          cache: maven
+      - name: Build Maven
+        run: |
+          mvn clean package
+          pwd
+          mkdir stage && cp target/health-check-api-0.0.1-SNAPSHOT.jar stage   
+          cp stage/*.jar ami
+          cd ami && ls -all
+        env:
+          APP_NAME: my-spring-boot-app
+      - name: Test
+        run: mvn test -DskipTests=false
+      - name: Validate Packer
         uses: hashicorp/packer-github-actions@master
         with:
           command: validate
-          arguments: -var-file=amisetup.auto.pkrvars.hcl
-          target: ami.pkr.hcl
-      - name: Packer Init 2
-        uses: hashicorp/packer-github-actions@master
-        with:
-          command: init
-          target: ami.pkr.hcl
-      - name: Run Buildscript
-        uses: hashicorp/packer-github-actions@master
-        with:
-          command: build
-          arguments: -var=AWS_ACCESSKEY=${{ secrets.AWS_ACCESS_KEY_ID }} -var=AWS_SECTRET_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} -var-file=ami.auto.pkrvars.hcl -on-error=abort
+          arguments: -syntax-only
           target: ami.pkr.hcl
         env:
-          PACKER_LOG: 1
+          PACKER_LOG: 1 # enable debug log for packer
 
-  code_deploy:
-    runs-on: ubuntu-latest
-    name: Deploying code to server
-    steps:
-      - name: Checking out code
-        uses: actions/checkout@v2
-
-      - name: Setup AWS CLI
-        run: sudo pip install awscli
-
-      - name: Configure AWS env
-        run: |
-          aws configure set region us-east-1
-          aws configure set aws_access_key_id ${{ secrets.GHUSER_ACCESS_KEY }}
-          aws configure set aws_secret_access_key ${{ secrets.GHUSER_SECRET_KEY }}
-
-      
