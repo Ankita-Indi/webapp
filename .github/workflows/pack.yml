@@ -7,7 +7,6 @@ on:
 jobs:
   build-packer:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
     steps:
       - uses: actions/checkout@v3
       - name: Setup Packer 
@@ -25,15 +24,15 @@ jobs:
           mvn clean package
           pwd
           mkdir stage && cp target/health-check-api-0.0.1-SNAPSHOT.jar stage   
-          cp stage/*.jar ami
-          cd ami && ls -all
+          cp stage/*.jar /home/runner/work/webapp/webapp
+          cd /home/runner/work/webapp/webapp && ls -all
       - name: Packer build
         uses: hashicorp/packer-github-actions@master
         with:
           command: build
           arguments: "-color=false -on-error=abort"
           target: ami.pkr.hcl
-          working_directory: ami
+          working_directory: /home/runner/work/webapp/webapp
         env:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
