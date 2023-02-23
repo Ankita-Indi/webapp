@@ -4,7 +4,7 @@
 # You can adjust the behavior by modifying this file.
 # For more information, see:
 # https://github.com/github/super-linter
-name: Unit Test Cases
+name: Unit Tests
 
 on:
   pull_request:
@@ -12,7 +12,7 @@ on:
 
 jobs:
   tests:
-    name: Unit Tests_1
+    name: Unit Tests
 
     runs-on: ubuntu-latest
 
