@@ -12,7 +12,7 @@ on:
 
 jobs:
   tests:
-    name: Unit Tests
+    name: Unit Tests_1
 
     runs-on: ubuntu-latest
 
