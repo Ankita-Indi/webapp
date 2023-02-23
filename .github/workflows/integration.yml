@@ -1,0 +1,75 @@
+name: CI
+
+env:
+  ARTIFACT_NAME: webservice-${{ github.sha }}
+
+on:
+  push:
+jobs:
+#  build:
+#    name: Service Unit tests
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Set up JDK 8
+#        uses: actions/setup-java@v2
+#        with:
+#          java-version: '8'
+#          distribution: 'adopt'
+#      - name: Run Tests
+#        run: mvn --batch-mode --update-snapshots test
+  ami_build:
+#    needs: build
+    runs-on: ubuntu-latest
+    name: Packer AMI setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Zip files
+        run: zip -r webservice.zip ./
+      - name: Show contents of folder
+        run: echo $(ls)
+#      - name: Action - Checkout
+#        uses: actions/checkout@v2
+      - name: Packer Init 1
+        uses: hashicorp/packer-github-actions@master
+        with:
+          command: init
+          target: ami.pkr.hcl
+      - name: Validate Template
+        uses: hashicorp/packer-github-actions@master
+        with:
+          command: validate
+          arguments: -var-file=amisetup.auto.pkrvars.hcl
+          target: ami.pkr.hcl
+      - name: Packer Init 2
+        uses: hashicorp/packer-github-actions@master
+        with:
+          command: init
+          target: ami.pkr.hcl
+      - name: Run Buildscript
+        uses: hashicorp/packer-github-actions@master
+        with:
+          command: build
+          arguments: -var=AWS_ACCESSKEY=${{ secrets.AWS_ACCESS_KEY_ID }} -var=AWS_SECTRET_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} -var-file=ami.auto.pkrvars.hcl -on-error=abort
+          target: ami.pkr.hcl
+        env:
+          PACKER_LOG: 1
+
+  code_deploy:
+    runs-on: ubuntu-latest
+    name: Deploying code to server
+    steps:
+      - name: Checking out code
+        uses: actions/checkout@v2
+
+      - name: Setup AWS CLI
+        run: sudo pip install awscli
+
+      - name: Configure AWS env
+        run: |
+          aws configure set region us-east-1
+          aws configure set aws_access_key_id ${{ secrets.GHUSER_ACCESS_KEY }}
+          aws configure set aws_secret_access_key ${{ secrets.GHUSER_SECRET_KEY }}
+
+      

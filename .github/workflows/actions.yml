@@ -32,3 +32,5 @@ jobs:
 
       - name: Run Tests
         run: mvn -B test
+
+    
