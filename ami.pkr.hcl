@@ -70,10 +70,15 @@ source "amazon-ebs" "my-ami" {
 build {
   sources = ["source.amazon-ebs.my-ami"]
 
-  # provisioner "file" {
-  #   sources = [ "./uploads/"]
-  #   destination = "/home/ec2/"
-  # }
+  provisioner "file" {
+    sources     = ["./target/health-check-api-0.0.1-SNAPSHOT.jar"]
+    destination = "/tmp/"
+  }
+
+  provisioner "file" {
+    sources     = ["health-check-api.service"]
+    destination = "/tmp/"
+  }
 
   provisioner "shell" {
     # environment_vars = [

@@ -4,8 +4,8 @@ After=syslog.target
 
 [Service]
 User=ec2-user
-ExecStart=/usr/bin/java -jar health-check-api-0.0.1-SNAPSHOT.jar
-SuccessExitStatus=143 
+ExecStart=/usr/bin/java -jar /tmp/health-check-api-0.0.1-SNAPSHOT.jar
+SuccessExitStatus=143
 
-[Install] 
+[Install]
 WantedBy=multi-user.target
