@@ -35,6 +35,7 @@ variable "aws_devuser" {
 
 
 
+
 # https://www.packer.io/plugins/builders/amazon/ebs
 source "amazon-ebs" "my-ami" {
   region          = "${var.aws_region}"
