@@ -15,7 +15,7 @@ public class Image {
 
 
     @Column(name = "product_id")
-    private int product_id;
+    private int productId;
 
 
     @Column(name = "file_name")
@@ -38,12 +38,13 @@ public class Image {
         this.id = id;
     }
 
-    public int getProduct_id() {
-        return product_id;
+
+    public int getProductId() {
+        return productId;
     }
 
-    public void setProduct_id(int product_id) {
-        this.product_id = product_id;
+    public void setProductId(int productId) {
+        this.productId = productId;
     }
 
     public String getFile_name() {
@@ -71,7 +72,7 @@ public class Image {
     }
 
     public Image(int product_id, String file_name, String s3_bucket_path) {
-        this.product_id = product_id;
+        this.productId = product_id;
         this.file_name = file_name;
         this.s3_bucket_path = s3_bucket_path;
         this.date_created = OffsetDateTime.now().toString();
@@ -86,7 +87,7 @@ public class Image {
             return false;
         Image img = (Image) o;
         return Objects.equals(this.id, img.id)
-                && Objects.equals(this.product_id, img.product_id)
+                && Objects.equals(this.productId, img.productId)
                 && Objects.equals(this.file_name, img.file_name)
                 && Objects.equals(this.s3_bucket_path, img.s3_bucket_path)
                 && Objects.equals(this.date_created, img.date_created);
