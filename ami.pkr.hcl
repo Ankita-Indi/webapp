@@ -5,7 +5,7 @@ variable "aws_region" {
 
 variable "source_ami" {
   type    = string
-  default = "ami-0dfcb1ef8550277af" # Ubuntu 22.04 LTS
+  default = "ami-006dcf34c09e50022" # Ubuntu 22.04 LTS
 }
 
 variable "ssh_username" {
@@ -13,10 +13,6 @@ variable "ssh_username" {
   default = "ec2-user"
 }
 
-#variable "subnet_id" {
-#  type    = string
-#  default = "subnet-0efede05bd423a4a7"
-#}
 
 variable "profile" {
   type    = string
@@ -32,8 +28,6 @@ variable "aws_devuser" {
   type    = string
   default = "966364109421"
 }
-
-
 
 
 # https://www.packer.io/plugins/builders/amazon/ebs
@@ -58,7 +52,7 @@ source "amazon-ebs" "my-ami" {
   instance_type = "t2.micro"
   source_ami    = "${var.source_ami}"
   ssh_username  = "${var.ssh_username}"
-#  subnet_id     = "${var.subnet_id}"
+
 
   launch_block_device_mappings {
     delete_on_termination = true
@@ -82,10 +76,6 @@ build {
   }
 
   provisioner "shell" {
-    # environment_vars = [
-    #   "DEBIAN_FRONTEND=noninteractive",
-    #   "CHECKPOINT_DISABLE=1"
-    # ]
     scripts = [
       "setup.sh"
     ]

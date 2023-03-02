@@ -1,9 +1,15 @@
 package com.example.healthcheckapi.controller;
 
 import com.example.healthcheckapi.model.Product;
+import com.example.healthcheckapi.model.Image;
 import com.example.healthcheckapi.model.User;
+import com.example.healthcheckapi.repository.ImageRepository;
 import com.example.healthcheckapi.repository.ProductRepository;
 import com.example.healthcheckapi.repository.UserRepository;
+import com.example.healthcheckapi.service.ImageStorageService;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+import org.springframework.web.multipart.MultipartFile;
+
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.Query;
@@ -27,6 +33,11 @@ public class ProductController {
     UserRepository userRepository;
     @Autowired
     BCryptPasswordEncoder bCryptPasswordEncoder;
+     @Autowired
+    ImageRepository imageRepository;
+
+    @Autowired
+    ImageStorageService service;
 
     public ProductController() {
         System.out.println("in product controller constructor");
@@ -273,6 +284,161 @@ public class ProductController {
         }
 
     }
+
+
+    
+
+
+
+    @GetMapping(value = "/product/{product_id}/image/{image_id}")
+    public ResponseEntity<Image> getImage(HttpServletRequest request, @PathVariable int product_id, @PathVariable int image_id) {
+
+        System.out.println("product/{product_id}/image/{image_id}");
+
+        //check user credentials and get userid
+        String upd = request.getHeader("authorization");
+        if (upd == null || upd.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        String pair = new String(Base64.decodeBase64(upd.substring(6)));
+        String userName = pair.split(":")[0];
+        String password = pair.split(":")[1];
+
+        System.out.println("username: " + userName);
+        System.out.println("password: " + password);
+
+        Optional<User> inputUser = userRepository.findByUsername(userName);
+        Optional<Product> inputProduct = productRepository.findById(product_id);
+        Optional<Image> img = imageRepository.findById(image_id);
+        //Optional<Image> img;
+        if (inputUser.isPresent()) {
+            if (bCryptPasswordEncoder.matches(password, inputUser.get().getPassword())) {
+
+                System.out.println("Password matched");
+                if (inputProduct.isPresent()) {
+                    if (inputUser.get().getId() != inputProduct.get().getOwner_user_id() ||
+                            img.get().getProduct_id() != product_id) {
+                        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+                    }
+                    if (img.isPresent()) {
+                        return new ResponseEntity<>(img.get(), HttpStatus.OK);
+                    } else {
+                        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+                    }
+                } else {
+                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                }
+            } else {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+        }
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+
+    @DeleteMapping(value = "/product/{product_id}/image/{image_id}")
+
+    public ResponseEntity<String> deleteImage(HttpServletRequest request, @PathVariable int product_id, @PathVariable int image_id) {
+
+        System.out.println("/product/{product_id}/image/{image_id}");
+
+        //check user credentials and get userid
+        String upd = request.getHeader("authorization");
+        if (upd == null || upd.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        String pair = new String(Base64.decodeBase64(upd.substring(6)));
+        String userName = pair.split(":")[0];
+        String password = pair.split(":")[1];
+
+        System.out.println("username: " + userName);
+        System.out.println("password: " + password);
+
+        Optional<User> inputUser = userRepository.findByUsername(userName);
+        Optional<Product> inputProduct = productRepository.findById(product_id);
+        Optional<Image> img;
+
+        if (inputUser.isPresent()) {
+
+            if (bCryptPasswordEncoder.matches(password, inputUser.get().getPassword())) {
+
+                User user = inputUser.get();
+                Product product = inputProduct.get();
+                img = imageRepository.findById(user.getId());
+
+                if (img.isPresent()) {
+
+                    String result = service.deleteFileFromS3Bucket(img.get().getS3_bucket_path(),img.get().getProduct_id());
+                    imageRepository.delete(img.get());
+                    return new ResponseEntity<>(result, HttpStatus.NO_CONTENT);
+                }
+                else {
+                    return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+                }
+            } else {
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PostMapping(value = "/product/{productId}/image")
+    public ResponseEntity<Image> createImage(@RequestParam(value="profilePic") MultipartFile profilePic,
+                                             HttpServletRequest request, @PathVariable int productId){
+        System.out.println("In post image");
+        //check user credentials and get userid
+        String upd = request.getHeader("authorization");
+        if (upd == null || upd.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        String pair = new String(Base64.decodeBase64(upd.substring(6)));
+        String userName = pair.split(":")[0];
+        String password = pair.split(":")[1];
+
+        Optional<User> inputUser = userRepository.findByUsername(userName);
+        //Optional<User> inputUser = userRepository.findByUsername(userName);
+        Optional<Product> inputProduct = productRepository.findById(productId);
+        Image img;
+        if (inputUser.isPresent()) {
+            if (bCryptPasswordEncoder.matches(password, inputUser.get().getPassword())) {
+
+                //matches password complete-- add code here
+                User user = inputUser.get();
+                Product product = inputProduct.get();
+
+                System.out.println("File Content Type: " + profilePic.getContentType());
+                if(!profilePic.getContentType().startsWith("image/"))
+                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
+                String bucket_name = service.uploadFile( productId + "/" + profilePic.getOriginalFilename(), profilePic);
+
+                String url = bucket_name + "/" + user.getId() + "/" + profilePic.getOriginalFilename();
+
+                img = new Image(productId, profilePic.getOriginalFilename(), url);
+                imageRepository.save(img);
+
+            } else {
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
+        } else {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>(img, HttpStatus.CREATED);
+    }
+
+
+
+
+    
+        
+
+
+
+
+
 
 
     @GetMapping("/product/{productId}")
