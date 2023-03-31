@@ -69,6 +69,11 @@ build {
     sources     = ["./target/health-check-api-0.0.1-SNAPSHOT.jar"]
     destination = "/tmp/"
   }
+  provisioner "file" {
+    source      = "cloudwatch-config.json"
+    destination = "/tmp/cloudwatch-config.json"
+  }
+
 
   provisioner "file" {
     sources     = ["health-check-api.service"]

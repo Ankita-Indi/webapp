@@ -1,6 +1,7 @@
 package com.example.healthcheckapi;
 
 import com.example.healthcheckapi.controller.HealthController;
+import com.timgroup.statsd.StatsDClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,6 +23,9 @@ class HealthCheckApiApplicationTests {
 
     @MockBean
     private DataSource dataSource;
+
+    @MockBean
+    private StatsDClient statsDClient;
 
     @Test
     public void testHealthCheck() throws Exception
