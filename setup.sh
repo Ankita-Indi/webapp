@@ -26,7 +26,7 @@ sleep 10
 sudo yum install amazon-cloudwatch-agent -y
 
 sudo chmod 544 /tmp/health-check-api.service
-sudo chmod 774 /tmp/cloudwatchagent_config.json
+sudo chmod 774 /tmp/cloudwatch-config.json
 sudo mv /tmp/health-check-api.service /etc/systemd/system/health-check-api.service
 sudo mv /tmp/cloudwatch-config.json /opt/aws/amazon-cloudwatch-agent/cloudwatch-config.json
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/cloudwatch-config.json -s
