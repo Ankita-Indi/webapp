@@ -50,6 +50,10 @@ PATCH: localhost:8080/v1/product/{productId}
 
 DELETE:  localhost:8080/v1/product/{productId} 
 
+**Assignment07**
+
+
+
 
 
 
