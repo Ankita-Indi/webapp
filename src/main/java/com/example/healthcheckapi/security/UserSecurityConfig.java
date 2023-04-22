@@ -32,6 +32,6 @@ public class UserSecurityConfig extends WebSecurityConfigurerAdapter {
 
  @Override
  public void configure(WebSecurity web) throws Exception {
-  web.ignoring().antMatchers("/v1/user/**").antMatchers("/healthz").antMatchers("/v1/product/**").antMatchers("/v1/health/**");
+  web.ignoring().antMatchers("/v1/user/**").antMatchers("/healthz").antMatchers("/v1/product/**").antMatchers("/health/**");
  }
 }
