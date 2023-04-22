@@ -21,4 +21,10 @@ public class HealthController {
         statsDClient.incrementCounter("endpoint.healthz.get");
         logger.info("endpoint.healthz.get hit successfully");
     }
+    
+    @GetMapping("/health/ankita")
+    public void healthCheck1() {
+        statsDClient.incrementCounter("endpoint.healthz.get");
+        logger.info("endpoint.healthz.get hit successfully");
+    }
 }
